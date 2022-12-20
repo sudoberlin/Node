@@ -13,19 +13,27 @@ const server = http.createServer((req,res) => {
         return res.end()
     }
     if (url === '/message' && method === 'POST'){
-        // listens to events in this case -data
+        // on allows us to listen to events in this case -data
         const body = [];
         req.on('data',(chunk) =>{
             console.log(chunk);
             body.push(chunk);
-        })
-        fs.writeFileSync('message.txt','DUMMY');
-        res.statusCode = 302;
-        res.setHeader('Location','/');
-        return res.end();
+        });
+
+        // end listener
+        req.on('end',() => {
+            const parsedBody = Buffer.concat(body).toString();
+            const message = parsedBody.split('=')[1];
+            console.log(parsedBody)
+            //sync - method will block the program until it finishes - not a prefarable method
+            // use async which wont block or we can use writefile with adding error handling
+            fs.writeFileSync('message.txt',message, err => {
+                res.statusCode = 302;
+                res.setHeader('Location','/');
+                return res.end(); 
+            });
+        });
     }
-
-
 
     //console.log(res)
     res.setHeader('Content-Type','text/html');
